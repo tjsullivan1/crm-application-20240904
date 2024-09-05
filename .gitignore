@@ -35,3 +35,10 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# secret.tfvars files
+!**/sample-secrets.tfvars
+!**/sample-backend-secrets.tfvars
+
+# Ignore the .env file
+.env
