@@ -14,28 +14,33 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = ["10.0.0.0/16"]
 }
 
-resource "azurerm_subnet" "ingress" {
-  name                 = "ingress-subnet"
+resource "azurerm_subnet" "default" {
+  name                 = "default"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.0.0/24"]
+}
+
+resource "azurerm_subnet" "gateway" {
+  name                 = "gateway"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-resource "azurerm_subnet" "apim" {
-  name                 = "apim-subnet"
+resource "azurerm_subnet" "appInbound" {
+  name                 = "app-inbound"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.2.0/24"]
+  address_prefixes     = ["10.0.11.0/24"]
 }
 
-resource "azurerm_subnet" "apps" {
-  name                 = "apps-subnet"
+resource "azurerm_subnet" "appOutbound" {
+  name                 = "app-outbound"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-
-  address_prefixes     = ["10.0.10.0/24"]
-
-  service_endpoints = ["Microsoft.Storage"]
+  address_prefixes     = ["10.0.12.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
 
   delegation {
     name = "delegation"
