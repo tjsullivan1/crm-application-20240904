@@ -50,15 +50,15 @@ resource "azurerm_application_gateway" "gateway" {
     public_ip_address_id = azurerm_public_ip.ip.id
   }
 
-    frontend_port {
-      name = "${local.frontend_port_name}-http"
-      port = 80
-    }
+  frontend_port {
+    name = "${local.frontend_port_name}-http"
+    port = 80
+  }
 
-  # frontend_port {
-  #   name = "${local.frontend_port_name}-https"
-  #   port = 443
-  # }
+  frontend_port {
+    name = "${local.frontend_port_name}-https"
+    port = 443
+  }
 
   backend_address_pool {
     name = "${local.backend_address_pool_name}-sso"
@@ -67,6 +67,16 @@ resource "azurerm_application_gateway" "gateway" {
     # ]
     fqdns = [
       azurerm_windows_web_app.app.default_hostname
+    ]
+  }
+
+  backend_address_pool {
+    name = "${local.backend_address_pool_name}-main"
+    # ip_addresses = [
+    #   azurerm_api_management.apim.private_ip_addresses[0]
+    # ]
+    fqdns = [
+      azurerm_windows_web_app.app-main.default_hostname
     ]
   }
 
@@ -86,6 +96,7 @@ resource "azurerm_application_gateway" "gateway" {
     frontend_port_name             = "${local.frontend_port_name}-http"
     protocol                       = "Http"
   }
+  
 
   backend_http_settings {
     name                  = "${local.http_setting_name}-sso"
@@ -135,10 +146,10 @@ resource "azurerm_application_gateway" "gateway" {
 
   url_path_map {
     name = local.url_path_name
-    # default_backend_address_pool_name = "${local.backend_address_pool_name}-sso"
-    # default_backend_http_settings_name = "${local.http_setting_name}-sso"
+    default_backend_address_pool_name   = "${local.backend_address_pool_name}-main"
+    default_backend_http_settings_name  = "${local.http_setting_name}-sso"
 
-    default_redirect_configuration_name = local.redirect_configuration_name
+    # default_redirect_configuration_name = local.redirect_configuration_name
 
     path_rule {
       name       = "test"
@@ -149,9 +160,9 @@ resource "azurerm_application_gateway" "gateway" {
     }
   }
 
-  redirect_configuration {
-    name = local.redirect_configuration_name
-    redirect_type = "Temporary"
-    target_url = "https://www.microsoft.com"
-  }
+  # redirect_configuration {
+  #   name = local.redirect_configuration_name
+  #   redirect_type = "Temporary"
+  #   target_url = "https://www.microsoft.com"
+  # }
 }
