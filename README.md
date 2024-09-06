@@ -16,6 +16,6 @@ terraform init
 # Apply the Terraform
 terraform apply \
 -var 'base_name=crm-application-20240904' \
--var 'location=eastus2' 
-
+-var 'location=eastus2' \
+-var 'home_ip=123.123.123.123/32'
 ```
