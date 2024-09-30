@@ -33,7 +33,8 @@
 			"extensions": [
 				"ms-dotnettools.csharp",
 				"ms-mssql.mssql",
-				"GitHub.copilot-chat"
+				"GitHub.copilot-chat",
+				"ms-dotnettools.csdevkit"
 			]
 		}
 	},
