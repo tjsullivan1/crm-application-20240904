@@ -11,7 +11,6 @@ variable "location" {
 resource "azurerm_resource_group" "rg" {
   name     = var.base_name
   location = var.location
-
   
   # ignore changes to tags
   lifecycle {
@@ -141,4 +140,10 @@ resource "azurerm_windows_web_app" "app02" {
 
   // This is the wire-up to the outbound/egress subnet
   virtual_network_subnet_id = azurerm_subnet.appOutbound.id
+}
+
+resource "azurerm_cdn_frontdoor_profile" "afd" {
+  name                = "${var.base_name}-afd"
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name            = "Premium_AzureFrontDoor"
 }
