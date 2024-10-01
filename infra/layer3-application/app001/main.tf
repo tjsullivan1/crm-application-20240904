@@ -8,6 +8,21 @@ variable "location" {
   description = "The Azure region where the resources will be created."
 }
 
+variable "user_managed_identity" {
+  type        = string
+  description = "The principal or application ID of the Azure user managed identity to assign to the resources."
+}
+
+variable "outbound_subnet_id" {
+  type        = string
+  description = "The id of the subnet that the app services will use to communicate with other services."
+}
+
+variable "key_vault_uri" {
+  type        = string
+  description = "The URI to the key vault where app service secretes are stored."
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = var.base_name
   location = var.location
@@ -15,37 +30,6 @@ resource "azurerm_resource_group" "rg" {
   # ignore changes to tags
   lifecycle {
     ignore_changes = [tags]
-  }
-}
-
-resource "azurerm_virtual_network" "vnet" {
-  name                = "${var.base_name}-vnet"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "default" {
-  name                 = "default"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.0.0/24"]
-}
-
-resource "azurerm_subnet" "appOutbound" {
-  name                 = "app-outbound"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.12.0/24"]
-  service_endpoints    = ["Microsoft.Storage"]
-
-  delegation {
-    name = "delegation"
-
-    service_delegation {
-        name    = "Microsoft.Web/serverFarms"
-        actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
   }
 }
 
@@ -64,6 +48,21 @@ resource "azurerm_windows_web_app" "app01" {
   service_plan_id     = azurerm_service_plan.plan.id
 
   https_only = true
+
+  ftp_publish_basic_authentication_enabled       = false
+  webdeploy_publish_basic_authentication_enabled = false
+
+  // This is the wire-up to the outbound/egress subnet
+  virtual_network_subnet_id = var.outbound_subnet_id
+
+  // This is the user that will be use to access the key vault secrets
+  key_vault_reference_identity_id = var.user_managed_identity
+
+  // Setup the app service with a user assigned identity
+  identity {
+    type = "UserAssigned"
+    identity_ids = [var.user_managed_identity]
+  }
 
   site_config {
     vnet_route_all_enabled = true
@@ -90,11 +89,10 @@ resource "azurerm_windows_web_app" "app01" {
     }
   }
 
-  ftp_publish_basic_authentication_enabled       = false
-  webdeploy_publish_basic_authentication_enabled = false
-
-  // This is the wire-up to the outbound/egress subnet
-  virtual_network_subnet_id = azurerm_subnet.appOutbound.id
+  app_settings = {
+    "MY_SETTING" = "Something Special!"
+    "MY_SECRET"  = "@Microsoft.KeyVault(SecretUri=${var.key_vault_uri}secrets/TestSecret)"
+  }
 }
 
 resource "azurerm_windows_web_app" "app02" {
@@ -104,6 +102,21 @@ resource "azurerm_windows_web_app" "app02" {
   service_plan_id     = azurerm_service_plan.plan.id
 
   https_only = true
+
+  ftp_publish_basic_authentication_enabled       = false
+  webdeploy_publish_basic_authentication_enabled = false
+
+  // This is the wire-up to the outbound/egress subnet
+  virtual_network_subnet_id = var.outbound_subnet_id
+
+  // This is the user that will be use to access the key vault secrets
+  key_vault_reference_identity_id = var.user_managed_identity
+
+  // Setup the app service with a user assigned identity
+  identity {
+    type = "UserAssigned"
+    identity_ids = [var.user_managed_identity]
+  }
 
   site_config {
     vnet_route_all_enabled = true
@@ -134,16 +147,4 @@ resource "azurerm_windows_web_app" "app02" {
       preload = true
     }
   }
-
-  ftp_publish_basic_authentication_enabled       = false
-  webdeploy_publish_basic_authentication_enabled = false
-
-  // This is the wire-up to the outbound/egress subnet
-  virtual_network_subnet_id = azurerm_subnet.appOutbound.id
-}
-
-resource "azurerm_cdn_frontdoor_profile" "afd" {
-  name                = "${var.base_name}-afd"
-  resource_group_name = azurerm_resource_group.rg.name
-  sku_name            = "Premium_AzureFrontDoor"
 }
