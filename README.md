@@ -80,3 +80,17 @@ terraform apply \
 -var "key_vault_uri=$KV_URI"
 
 ```
+
+## Application Deployment
+
+This will allow you to deploy the sample application to the app service created above.
+
+```bash
+
+cd app/WebApplication1
+
+dotnet publish -c Release
+
+# Now use the VS Code App Service extension to deploy the app
+
+```
