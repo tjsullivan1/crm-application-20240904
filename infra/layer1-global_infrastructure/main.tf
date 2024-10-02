@@ -48,3 +48,7 @@ resource "azurerm_subnet" "appOutbound" {
     }
   }
 }
+
+output "app_outbound_subnet_id" {
+  value = azurerm_subnet.appOutbound.id
+}

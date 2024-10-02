@@ -23,3 +23,7 @@ resource "azurerm_user_assigned_identity" "user_identity" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 }
+
+output "user_managed_identity_id" {
+  value = azurerm_user_assigned_identity.user_identity.id
+}

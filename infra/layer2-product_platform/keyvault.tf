@@ -31,3 +31,7 @@ resource "azurerm_key_vault_secret" "secret" {
   name = "TestSecret"
   value = "Top Secret Value!"
 }
+
+output "key_vault_uri" {
+  value = azurerm_key_vault.kv.vault_uri
+}

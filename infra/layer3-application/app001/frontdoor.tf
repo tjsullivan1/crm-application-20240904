@@ -35,4 +35,8 @@ resource "azurerm_cdn_frontdoor_route" "route01_01" {
     compression_enabled           = true
     content_types_to_compress     = ["text/html", "text/javascript", "text/xml"]
   }*/
+
+  depends_on = [
+    azurerm_cdn_frontdoor_origin.origin01_01
+  ]
 }

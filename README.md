@@ -32,6 +32,9 @@ terraform apply \
 -var "base_name=crm-v1-l1-globalcore" \
 -var "location=$LOCATION"
 
+# Log output variables
+app_outbound_subnet_id
+
 ```
 
 ## Layer 2: Product Platform
@@ -50,6 +53,12 @@ terraform apply \
 -var "base_name=crm-v1-l2-appcore" \
 -var "location=$LOCATION"
 
+# Log output variables
+key_vault_uri
+afd_default_origin_group_id
+afd_endpoint_id
+user_managed_identity_id
+
 ```
 
 ## Layer 3: Application
@@ -65,11 +74,12 @@ cd infra/layer3-application/app001/
 # Uses local storage for state
 terraform init
 
-KV_URI=$(az keyvault show -g crm-v1-l2-appcore --name crm-v1-l2-appcore-kv --query properties.vaultUri -o tsv)
-SUBNET_ID=$(az network vnet subnet show -g crm-v1-l1-globalcore --vnet-name crm-v1-l1-globalcore-vnet --name app-outbound --query id -o tsv)
-USER_ID=$(az identity show -g crm-v1-l2-appcore --name crm-v1-l2-appcore-id --query id -o tsv)  # NOTE: This is case-sensitive and "resourcegroups" => "resourceGroups"
-
-# USER_ID='/subscriptions/30c417b6-b3c1-4b62-94c9-0d3a80a182e9/resourceGroups/crm-v1-l2-appcore/providers/Microsoft.ManagedIdentity/userAssignedIdentities/crm-v1-l2-appcore-id'
+# Check the variables from the previous runs
+SUBNET_ID=$(terraform output -state=../../layer1-global_infrastructure/terraform.tfstate -json | jq -r '.app_outbound_subnet_id.value')
+KV_URI=$(terraform output -state=../../layer2-product_platform/terraform.tfstate -json | jq -r '.key_vault_uri.value')
+AFD_DOG_ID=$(terraform output -state=../../layer2-product_platform/terraform.tfstate -json | jq -r '.afd_default_origin_group_id.value')
+AFD_ENDPOINT_ID=$(terraform output -state=../../layer2-product_platform/terraform.tfstate -json | jq -r '.afd_endpoint_id.value')
+USER_ID=$(terraform output -state=../../layer2-product_platform/terraform.tfstate -json | jq -r '.user_managed_identity_id.value')
 
 # Apply the Terraform
 terraform apply \
@@ -77,7 +87,9 @@ terraform apply \
 -var "location=$LOCATION" \
 -var "outbound_subnet_id=$SUBNET_ID" \
 -var "user_managed_identity=$USER_ID" \
--var "key_vault_uri=$KV_URI"
+-var "key_vault_uri=$KV_URI" \
+-var "afd_endpoint_id=$AFD_ENDPOINT_ID" \
+-var "afd_default_origin_group_id=$AFD_DOG_ID"
 
 ```
 

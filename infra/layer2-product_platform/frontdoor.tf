@@ -39,3 +39,11 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "waf" {
   mode                = "Detection"
   enabled             = true
 }
+
+output "afd_endpoint_id" {
+  value = azurerm_cdn_frontdoor_endpoint.main.id
+}
+
+output "afd_default_origin_group_id" {
+  value = azurerm_cdn_frontdoor_origin_group.default.id
+}
